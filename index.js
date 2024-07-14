@@ -4,6 +4,18 @@ const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connect = require("./dbConfig");
+const authRouter = require("./routes/Auth");
+
+const corsOption = {
+  credentials: true,
+  origin: [process.env.CLIENT_URL],
+};
+
+app.use(cors(corsOption));
+app.use(express.json());
+app.use(cookieParser());
+
+app.use("/api/auth", authRouter.router);
 
 connect();
 
