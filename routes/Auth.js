@@ -7,5 +7,6 @@ const router = express.Router();
 router.post("/send-otp", Auth.sendOtp);
 router.post("/verify-otp", Auth.verifyOtp);
 router.post("/activate", authMiddleware, Auth.activate);
+router.get("/refresh", Auth.refresh);
 
 exports.router = router;
