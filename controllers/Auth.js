@@ -139,6 +139,14 @@ class Auth {
     // response
     return res.status(200).json({ user, auth: true });
   }
+
+  async logout(req, res) {
+    const { refreshToken } = req.cookies;
+    await tokenService.removeToken(refreshToken);
+    res.clearCookie("refreshToken");
+    res.clearCookie("accessToken");
+    return res.status(200).json({ user: null, auth: false });
+  }
 }
 
 module.exports = new Auth();
