@@ -4,7 +4,8 @@ const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connect = require("./dbConfig");
-const authRouter = require("./routes/Auth");
+const authRouter = require("./routes/auth");
+const roomRouter = require("./routes/room");
 
 const corsOption = {
   credentials: true,
@@ -16,6 +17,7 @@ app.use(express.json({ limit: "8mb" }));
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter.router);
+app.use("/api/room", roomRouter.router);
 
 connect();
 

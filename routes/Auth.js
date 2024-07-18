@@ -8,6 +8,6 @@ router.post("/send-otp", Auth.sendOtp);
 router.post("/verify-otp", Auth.verifyOtp);
 router.post("/activate", authMiddleware, Auth.activate);
 router.get("/refresh", Auth.refresh);
-router.get("/logout", Auth.logout);
+router.get("/logout", authMiddleware, Auth.logout);
 
 exports.router = router;
