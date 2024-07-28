@@ -71,11 +71,36 @@ const socketInit = (server) => {
       // Remove the socket's user information from the mapping
       delete socketUserMapping[socket.id];
     };
+    // Handles muting a user
+    const handleMute = ({ roomId, userId }) => {
+      const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
+      clients.forEach((clientId) => {
+        // Notify each client in the room that the current socket (peer) is muted
+        io.to(clientId).emit(ACTIONS.MUTE, {
+          peerId: socket.id,
+          userId,
+        });
+      });
+    };
+    // Handles unmuting a user
+    const handleUnMute = ({ roomId, userId }) => {
+      const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
+      clients.forEach((clientId) => {
+        // Notify each client in the room that the current socket (peer) is unmuted
+        io.to(clientId).emit(ACTIONS.UN_MUTE, {
+          peerId: socket.id,
+          userId,
+        });
+      });
+    };
+
     socket.on(ACTIONS.JOIN, joinNewUser);
     socket.on(ACTIONS.RELAY_ICE, relayIce);
     socket.on(ACTIONS.RELAY_SDP, relaySdp);
     socket.on(ACTIONS.LEAVE, leaveRoom);
     socket.on("disconnecting", leaveRoom);
+    socket.on(ACTIONS.MUTE, handleMute);
+    socket.on(ACTIONS.UN_MUTE, handleUnMute);
   });
 };
 
