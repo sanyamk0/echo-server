@@ -1,7 +1,8 @@
 const { Server } = require("socket.io");
 const { ACTIONS } = require("./actions");
 
-const scoketInit = (server) => {
+// Initialize Socket.IO server
+const socketInit = (server) => {
   const io = new Server(server, {
     cors: {
       origin: process.env.CLIENT_URL,
@@ -9,67 +10,73 @@ const scoketInit = (server) => {
     },
   });
 
-  const socketUserMapping = {};
+  const socketUserMapping = {}; // Maps socket Id's to user data
 
   io.on("connection", (socket) => {
-    const leaveRoom = () => {
-      const rooms = Array.from(socket.rooms).filter(
-        (room) => room !== socket.id
-      );
-      rooms.forEach((roomId) => {
-        const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
-        clients.forEach((clientId) => {
-          io.to(clientId).emit(ACTIONS.REMOVE_PEER, {
-            peerId: socket.id,
-            userId: socketUserMapping[socket.id]?._id,
-          });
-          socket.emit(ACTIONS.REMOVE_PEER, {
-            peerId: clientId,
-            userId: socketUserMapping[clientId]?._id,
-          });
-        });
-        socket.leave(roomId);
-      });
-      delete socketUserMapping[socket.id];
-    };
-    // Handle New User Join
-    socket.on(ACTIONS.JOIN, ({ roomId, user }) => {
+    console.log(`Socket connected: ${socket.id}`);
+    // Handles new user joining a room
+    const joinNewUser = ({ roomId, user }) => {
+      // Map the current socket Id to the user object
       socketUserMapping[socket.id] = user;
       const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
       clients.forEach((clientId) => {
-        //emit add_peer event to all clients in the room
+        // Notify existing clients of the new user in room
         io.to(clientId).emit(ACTIONS.ADD_PEER, {
           peerId: socket.id,
           createOffer: false,
           user,
         });
-        //emit add_peer event to the newly joined client
+        // Notify the new user of the existing clients in room
         socket.emit(ACTIONS.ADD_PEER, {
           peerId: clientId,
           createOffer: true,
           user: socketUserMapping[clientId],
         });
       });
-      socket.join(roomId);
-    });
-    // Handle relay ice
-    socket.on(ACTIONS.RELAY_ICE, ({ peerId, iceCandidate }) => {
+      socket.join(roomId); // Add the new user to the room
+    };
+    // Relays ICE_CANDIDATE to the specified peer
+    const relayIce = ({ peerId, iceCandidate }) => {
       io.to(peerId).emit(ACTIONS.ICE_CANDIDATE, {
         peerId: socket.id,
         iceCandidate,
       });
-    });
-    // Handle relay sdp (session description)
-    socket.on(ACTIONS.RELAY_SDP, ({ peerId, sessionDescription }) => {
+    };
+    // Relays SESSION_DESCRIPTION (offer/answer) to the specified peer
+    const relaySdp = ({ peerId, sessionDescription }) => {
       io.to(peerId).emit(ACTIONS.SESSION_DESCRIPTION, {
         peerId: socket.id,
         sessionDescription,
       });
-    });
-    // Handle Leave Room
+    };
+    // Handles user leaving the room
+    const leaveRoom = () => {
+      const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
+      rooms.forEach((roomId) => {
+        const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
+        clients.forEach((clientId) => {
+          // Notify each client in the room that the current socket (peer) is leaving
+          io.to(clientId).emit(ACTIONS.REMOVE_PEER, {
+            peerId: socket.id,
+            userId: socketUserMapping[socket.id]?._id,
+          });
+          // Notify the socket that is leaving about each remaining client in the room
+          socket.emit(ACTIONS.REMOVE_PEER, {
+            peerId: clientId,
+            userId: socketUserMapping[clientId]?._id,
+          });
+        });
+        socket.leave(roomId); // Remove the socket from the room
+      });
+      // Remove the socket's user information from the mapping
+      delete socketUserMapping[socket.id];
+    };
+    socket.on(ACTIONS.JOIN, joinNewUser);
+    socket.on(ACTIONS.RELAY_ICE, relayIce);
+    socket.on(ACTIONS.RELAY_SDP, relaySdp);
     socket.on(ACTIONS.LEAVE, leaveRoom);
     socket.on("disconnecting", leaveRoom);
   });
 };
 
-exports.socketInit = scoketInit;
+exports.socketInit = socketInit;
