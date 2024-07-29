@@ -19,6 +19,7 @@ const corsOption = {
 app.use(cors(corsOption));
 app.use(express.json({ limit: "8mb" }));
 app.use(cookieParser());
+app.use("/storage", express.static("storage"));
 
 app.use("/api/auth", authRouter.router);
 app.use("/api/room", roomRouter.router);
