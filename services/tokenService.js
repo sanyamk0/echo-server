@@ -14,7 +14,7 @@ class TokenService {
     });
     return { accessToken, refreshToken };
   }
-  // ToDo: before creating token check if it exists in the database
+
   async storeRefreshToken(refreshToken, userId) {
     try {
       await RefreshToken.create({
