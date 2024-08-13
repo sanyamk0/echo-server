@@ -18,6 +18,7 @@ const corsOption = {
 
 app.use(cors(corsOption));
 app.use(cookieParser());
+app.use(express.json());
 
 app.use("/api/auth", authRouter.router);
 app.use("/api/room", roomRouter.router);
