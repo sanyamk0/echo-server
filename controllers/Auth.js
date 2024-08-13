@@ -55,10 +55,14 @@ class Auth {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 30,
+      SameSite: "None",
+      Secure: true,
     });
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 30,
+      SameSite: "None",
+      Secure: true,
     });
     return res.status(200).json({ user, auth: true });
   }
@@ -145,10 +149,14 @@ class Auth {
     res.cookie("refreshToken", refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
+      SameSite: "None",
+      Secure: true,
     });
     res.cookie("accessToken", accessToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
+      SameSite: "None",
+      Secure: true,
     });
     // response
     return res.status(200).json({ user, auth: true });
